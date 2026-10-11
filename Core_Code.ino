@@ -36,8 +36,6 @@ bool blinkState = false;
 
 WebServer server(80);
 
-extern int sensorVal;
-
 const char INDEX_HTML[] PROGMEM = R"rawliteral(
 <!DOCTYPE html>
 <html lang="en">
