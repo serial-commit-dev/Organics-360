@@ -1,4 +1,11 @@
- int sensor_pin = 12;
+#include <WiFi.h>
+
+// WiFi access point config
+
+const char* ap_ssid = "Compost Monitor C1";
+const char* ap_password = "password3141";
+
+int sensor_pin = 12;
 int red_led = 13;
 int yellow_led = 14;
 int green_led = 15;
@@ -27,17 +34,24 @@ bool blinkState = false;
 
 
 void setup() {
-  pinMode(sensor_pin, INPUT);
-  pinMode(yellow_led, OUTPUT);
-  pinMode(green_led, OUTPUT);
-  pinMode(red_led, OUTPUT);
+ Serial.begin(115200);
+ 
+ WiFi.softAP(ap_ssid, ap_password);
 
-  digitalWrite(green_led, LOW);
-  digitalWrite(yellow_led, LOW);
-  digitalWrite(red_led, LOW);
+ Serial.println("\n--- ESp32 Access Point Started ---");
+ Serial.print("SSID: ");
+ Serial.println(ap_ssid);
+ Serial.print("AP IP Adress: ");
+ Serial.println(WiFi.softAPIP()); 
+ 
+ pinMode(sensor_pin, INPUT);
+ pinMode(yellow_led, OUTPUT);
+ pinMode(green_led, OUTPUT);
+ pinMode(red_led, OUTPUT);
 
-  
-  
+ digitalWrite(green_led, LOW);
+ digitalWrite(yellow_led, LOW);
+ digitalWrite(red_led, LOW); 
 }
 
 void loop(){
