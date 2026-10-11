@@ -1,4 +1,8 @@
 #include <WiFi.h>
+#include <WebServer.h>
+#include <ArduinoJson.h>
+
+
 
 // WiFi access point config
 
@@ -30,7 +34,64 @@ const long blink_interval = 500; // 500ms blink speed
 
 bool blinkState = false;
 
+WebServer server(80);
 
+const char INDEX_HTML[] PROGMEM = R"rawliteral(
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Compost Bin Monitor</title>
+   <style>
+      body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
+      h1 {color: #2c3e50; text-align: center;}
+      .data-box { border: 2px solid #333; background-color: #fff; padding: 20px; width: 250px; border-radius: 5px; margin-top: 15px;}
+      .gas-level { font-size: 32px; font-weight: bold; margin-top: 10px; color: #d35400; }
+      .status-text { font-size: 14px; margin-top: 10px; color: #7f8c8d; }
+   </style>
+</head>
+<body>
+  <h1>Organic 360</h1>
+  <div class="data-box">
+    <p>Live Sensor Value:</p>
+    <div class="gas-level">
+      <p>Methane: <span id="sensor-val">--</span></p>
+      <div id="status" class="status-text">Connecting...</div>
+    </div>
+  </div>
+      
+
+<script>
+    async function fetchGasData() {
+         try { const response = await fetch('/api/data');
+              const data = await response.json();
+              document.getElementById('sensor-val').innerText = data.sensor_value;
+              document.getElementById('status').innerText = "Status: Online";
+        } catch (error) {
+            console.error("Error fetching data:", error);
+            document.getElementById('status').innerText = "Status: Offline";
+        }
+     }
+     setInterval(fetchGasData, 30000);
+</script>
+
+</body>
+</html>
+)rawliteral";
+
+void handleRoot() {
+ server.send(200, "text/html", INDEX_HTML);
+}
+
+void handleApiData() {
+ StaticJsonDocument<128> doc;
+ doc["sensor_value"] = sensorVal;
+
+ String jsonOutput;
+ serializeJson(doc, jsonOutput);
+ server.send(200, "application/json", jsonOutput);
+}
 
 
 void setup() {
@@ -43,6 +104,10 @@ void setup() {
  Serial.println(ap_ssid);
  Serial.print("AP IP Adress: ");
  Serial.println(WiFi.softAPIP()); 
+
+ server.on("/", handleRoot);
+ server.on("/api/data", handleApiData);
+ server.begin();
  
  pinMode(sensor_pin, INPUT);
  pinMode(yellow_led, OUTPUT);
@@ -54,8 +119,10 @@ void setup() {
  digitalWrite(red_led, LOW); 
 }
 
-void loop(){
 
+void loop(){
+  server.handleClient();
+ 
   unsigned long current_millis = millis();
 
   sensorVal = digitalRead(sensor_pin);
