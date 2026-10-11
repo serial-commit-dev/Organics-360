@@ -17,10 +17,6 @@ int green_led = 15;
 float PL_CH4 = 0.5; // Permissible Methane Value
 int sensorVal;
 
-
-unsigned long red_previous_millis = 0;
-const long red_b_interval = 6000;   // duration set for RED LED to blink
-
 unsigned long yellow_millis = 0;
 const long yellow_b_interval = 6000;   // duration for YELLOW LED to blink
 
@@ -133,8 +129,8 @@ if (current_millis - previous_millis >= blink_interval) {
 
 } 
 
-  if (sensorVal >= PL_CH4*2 && (current_millis - red_previous_millis >= red_b_interval)) {
-    red_previous_millis = current_millis;
+  if (sensorVal >= PL_CH4*2) {
+    
     blink_red();  // add a seperate function to make red blink
     digitalWrite(yellow_led, LOW);
     digitalWrite(green_led, LOW);
