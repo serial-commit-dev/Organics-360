@@ -17,11 +17,7 @@ int green_led = 15;
 float PL_CH4 = 0.5; // Permissible Methane Value
 float sensorVal;
 
-unsigned long yellow_millis = 0;
-const long yellow_b_interval = 6000;   // duration for YELLOW LED to blink
 
-unsigned long green_millis = 0;
-const long green_b_interval = 6000;
 
 unsigned long previous_millis = 0;
 
@@ -40,25 +36,66 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <title>Compost Bin Monitor</title>
    <style>
-      body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
-      h1 {color: #2c3e50; text-align: center;}
-      .data-box { border: 2px solid #333; background-color: #fff; padding: 20px; width: 250px; border-radius: 5px; margin-top: 15px;}
+      body { font-family: Arial, sans-serif; margin: 0px; padding: 0px; background-color:#98bf64 ; color: #333; }
+      h1 {color: #FFF; text-align: center;}
+      h2 {color: lightblue; text-align: center;}
+      .data-box { margin: 20px; border: 2px solid #333; background-color: #fff; padding: 20px; width: 250px; border-radius: 5px; margin-top: 15px;}
       .gas-level { font-size: 32px; font-weight: bold; margin-top: 10px; color: #d35400; }
       .status-text { font-size: 14px; margin-top: 10px; color: #7f8c8d; }
+      .tagline { font-size: 16px; font-weight: bold; color: darkblue; text-align: center; }
+      nav {padding: 10px 20px; background-color: darkblue }
+      .nav-2 {background-color: lightblue; padding:1px 1px; margin: 0px; }
+      .methane {font-size: 20px}
+      .info {margin: 0px; padding: 0px 22px; display: flex; gap: 8px;; padding: 10px 0; font-size: 23px; }
+      
    </style>
 </head>
 <body>
-  <h1>Organic 360</h1>
+  <header>
+    <nav>
+        <h2>Thiruvananthapuram Municipal Corporation</h3>
+        <h1>Organics 360</h1>
+       
+        
+    </nav>
+
+    <div class="nav-2">
+       <p class="tagline">Smart Solution For Municipal Organic Waste Corporation</p>
+    </div>
+</header>
+
+  <div class="info">
+    <p class="date"></p>
+    <strong>MRF:</strong> Maruthoorkadavu | <strong>Ward:</strong> Kalady | <strong>Health Circle:</strong> Fort
+    <div id="live-clock" style="font-weight: bold; color: #008000; font-size: 23px;">
+      --
+    </div>
+  </div>
+  
   <div class="data-box">
     <p>Live Sensor Value:</p>
     <div class="gas-level">
-      <p>Methane: <span id="sensor-val">--</span></p>
+      <p class="methane">Methane: <span id="sensor-val">--</span></p>
+      <p class="methane">HydrogenSulphide: --</p>
       <div id="status" class="status-text">Connecting...</div>
     </div>
   </div>
       
 
 <script>
+    function updateClock() {
+      const now = new Date();
+      // Formats date and time cleanly (e.g., Oct 11, 2026, 11:55:30 PM)
+      const options = { 
+        year: 'numeric', month: 'short', day: 'numeric', 
+        hour: '2-digit', minute: '2-digit', second: '2-digit' 
+      };
+      document.getElementById('live-clock').innerText = now.toLocaleDateString('en-US', options);
+    }
+
+    // Update every second for a live clock effect
+    setInterval(updateClock, 1000);
+    updateClock();
     async function fetchGasData() {
          try { const response = await fetch('/api/data');
               const data = await response.json();
@@ -130,29 +167,34 @@ if (current_millis - previous_millis >= blink_interval) {
 } 
 
   if (sensorVal >= PL_CH4*2) {
-    
     blink_red();  // add a seperate function to make red blink
+    gas_status = "Hazard";
     digitalWrite(yellow_led, LOW);
     digitalWrite(green_led, LOW);
 
   } else if (sensorVal < PL_CH4*2 && sensorVal > PL_CH4*1.75){
     digitalWrite(red_led, HIGH);
+    gas_status = "Danger";
 
-  }else if (sensorVal < PL_CH4*1.75 && sensorVal >= PL_CH4*1.5 && (current_millis - yellow_millis >= yellow_b_interval)){
-    yellow_millis = current_millis;
+  }else if (sensorVal < PL_CH4*1.75 && sensorVal >= PL_CH4*1.5){
     blink_yellow();  //add function to make yellow led blink
+    gas_status = "Critical";
     digitalWrite(red_led, LOW);
     digitalWrite(green_led, LOW);
 
   }else if (sensorVal < PL_CH4*1.5 && sensorVal >= PL_CH4*1.25){
     digitalWrite(yellow_led, HIGH);
+    gas_status = "Border Line 2";
 
-  }else if (sensorVal < PL_CH4*1.25 && sensorVal > PL_CH4*1 && (current_millis - green_millis >= green_b_interval)) {
-    green_millis = current_millis;
+  }else if (sensorVal < PL_CH4*1.25 && sensorVal > PL_CH4*1) {
     blink_green();
+    gas_status = "Border Line 1"
     digitalWrite(red_led, LOW);
     digitalWrite(yellow_led, LOW);
 
+  }else if (sensorVal < PL_CH4) {
+    digitalWrite(green_led, HIGH);
+    gas_status = "Safe";
   }
 }
 
