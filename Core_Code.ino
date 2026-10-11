@@ -15,7 +15,7 @@ int yellow_led = 14;
 int green_led = 15;
 
 float PL_CH4 = 0.5; // Permissible Methane Value
-int sensorVal;
+float sensorVal;
 
 unsigned long yellow_millis = 0;
 const long yellow_b_interval = 6000;   // duration for YELLOW LED to blink
