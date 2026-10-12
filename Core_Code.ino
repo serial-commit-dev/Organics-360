@@ -28,6 +28,8 @@ unsigned long previous_millis = 0;
 unsigned long blink_previous_millis = 0;
 const long blink_interval = 500; // 500ms blink speed
 
+String gas_status = "";
+
 bool blinkState = false;
 
 WebServer server(80);
@@ -132,6 +134,7 @@ void handleRoot() {
 void handleApiData() {
  StaticJsonDocument<128> doc;
  doc["sensor_value"] = sensorVal;
+ doc["gas_status"] = gas_status;
 
  String jsonOutput;
  serializeJson(doc, jsonOutput);
@@ -179,29 +182,36 @@ if (current_millis - previous_millis >= blink_interval) {
 } 
 
   if (sensorVal >= PL_CH4*2) {
-    
     blink_red();  // add a seperate function to make red blink
+    gas_status = "Hazard";
     digitalWrite(yellow_led, LOW);
     digitalWrite(green_led, LOW);
 
   } else if (sensorVal < PL_CH4*2 && sensorVal > PL_CH4*1.75){
     digitalWrite(red_led, HIGH);
+    gas_status = "Danger";
 
   }else if (sensorVal < PL_CH4*1.75 && sensorVal >= PL_CH4*1.5 && (current_millis - yellow_millis >= yellow_b_interval)){
     yellow_millis = current_millis;
     blink_yellow();  //add function to make yellow led blink
+    gas_status = "Critical";
     digitalWrite(red_led, LOW);
     digitalWrite(green_led, LOW);
 
   }else if (sensorVal < PL_CH4*1.5 && sensorVal >= PL_CH4*1.25){
     digitalWrite(yellow_led, HIGH);
+    gas_status = "Borderline 2";
 
   }else if (sensorVal < PL_CH4*1.25 && sensorVal > PL_CH4*1 && (current_millis - green_millis >= green_b_interval)) {
     green_millis = current_millis;
     blink_green();
+    gas_status = "Borderline 1";
     digitalWrite(red_led, LOW);
     digitalWrite(yellow_led, LOW);
 
+  }else if (sensorVal < PL_CH4) {
+     digitalWrite(green_led, HIGH);
+     gas_status = "Safe";
   }
 }
 
