@@ -44,30 +44,79 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <title>Compost Bin Monitor</title>
    <style>
-      body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
-      h1 {color: #2c3e50; text-align: center;}
-      .data-box { border: 2px solid #333; background-color: #fff; padding: 20px; width: 250px; border-radius: 5px; margin-top: 15px;}
+      body { font-family: Arial, sans-serif; margin: 0px; padding: 0px; background-color:#98bf64 ; color: #333; }
+      h1 {color: #FFF; text-align: center;}
+      h2 {color: lightblue; text-align: center;}
+      .data-box { margin: 20px; ; padding: 20px; width: 250px; margin-top: 15px;}
       .gas-level { font-size: 32px; font-weight: bold; margin-top: 10px; color: #d35400; }
       .status-text { font-size: 14px; margin-top: 10px; color: #7f8c8d; }
+      .tagline { font-size: 16px; font-weight: bold; color: darkblue; text-align: center; }
+      nav {padding: 10px 20px; background-color: darkblue }
+      .nav-2 {background-color: lightblue; padding:1px 1px; margin: 0px; }
+      .methane {font-size: 20px}
+      .info {margin: 0px; padding: 0px 22px; display: flex; gap: 8px;; padding: 10px 0; font-size: 23px; }
+      table, th, td {border:0.8px solid black; border-radius: 8px; margin: 0px; padding: 10px; margin-left: 73px; font-weight: bold; }
    </style>
 </head>
 <body>
-  <h1>Organic 360</h1>
-  <div class="data-box">
-    <p>Live Sensor Value:</p>
-    <div class="gas-level">
-      <p>Methane: <span id="sensor-val">--</span></p>
-      <div id="status" class="status-text">Connecting...</div>
+  <header>
+    <nav>
+        <h2>Thiruvananthapuram Municipal Corporation</h3>
+        <h1>Organics 360</h1>
+       
+        
+    </nav>
+
+    <div class="nav-2">
+       <p class="tagline">Smart Solution For Municipal Organic Waste Corporation</p>
+    </div>
+</header>
+
+  <div class="info">
+    <p class="date"></p>
+    <strong>MRF:</strong> Maruthoorkadavu | <strong>Ward:</strong> Kalady | <strong>Health Circle:</strong> Fort
+    <div id="live-clock" style="font-weight: bold; color: #008000; font-size: 23px; margin-left: auto;">
+      --
     </div>
   </div>
+  
+
+<table>
+    <tr>
+      <th>Gas</th>
+      <th>Permissible Level</th>
+      <th>Gas Levels (PPM)</th>
+      <th>Status</th>
+    </tr>
+    <tr>
+      <td>CH4</td>
+      <td>0.5</td>
+      <td><span id="sensor-val">--</span></td>
+      <td><span id="gas-status"></span></td>
+    </tr>
+  </table>
       
 
 <script>
+    function updateClock() {
+      const now = new Date();
+      // Formats date and time cleanly (e.g., Oct 11, 2026, 11:55:30 PM)
+      const options = { 
+        year: 'numeric', month: 'short', day: 'numeric', 
+        hour: '2-digit', minute: '2-digit', second: '2-digit' 
+      };
+      document.getElementById('live-clock').innerText = now.toLocaleDateString('en-US', options);
+    }
+
+    // Update every second for a live clock effect
+    setInterval(updateClock, 1000);
+    updateClock();
     async function fetchGasData() {
          try { const response = await fetch('/api/data');
               const data = await response.json();
               document.getElementById('sensor-val').innerText = data.sensor_value;
               document.getElementById('status').innerText = "Status: Online";
+              document.getElementById('gas-status').innerText = data.gas_status;
         } catch (error) {
             console.error("Error fetching data:", error);
             document.getElementById('status').innerText = "Status: Offline";
