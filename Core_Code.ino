@@ -17,7 +17,7 @@ int green_led = 15;
 float PL_CH4 = 0.5; // Permissible Methane Value
 float sensorVal;
 
-
+String gas_status = "";
 
 unsigned long previous_millis = 0;
 
@@ -100,6 +100,7 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
          try { const response = await fetch('/api/data');
               const data = await response.json();
               document.getElementById('sensor-val').innerText = data.sensor_value;
+              document.getElementById('gas-status').innerText = data.gas_status;
               document.getElementById('status').innerText = "Status: Online";
         } catch (error) {
             console.error("Error fetching data:", error);
@@ -132,7 +133,7 @@ void setup() {
  
  WiFi.softAP(ap_ssid, ap_password);
 
- Serial.println("\n--- ESp32 Access Point Started ---");
+ Serial.println("\n--- ESP32 Access Point Started ---");
  Serial.print("SSID: ");
  Serial.println(ap_ssid);
  Serial.print("AP IP Adress: ");
