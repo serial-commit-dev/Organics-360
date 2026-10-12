@@ -121,6 +121,7 @@ void handleRoot() {
 void handleApiData() {
  StaticJsonDocument<128> doc;
  doc["sensor_value"] = sensorVal;
+ doc["gas_status"] = gas_status;
 
  String jsonOutput;
  serializeJson(doc, jsonOutput);
@@ -189,7 +190,7 @@ if (current_millis - previous_millis >= blink_interval) {
 
   }else if (sensorVal < PL_CH4*1.25 && sensorVal > PL_CH4*1) {
     blink_green();
-    gas_status = "Border Line 1"
+    gas_status = "Border Line 1";
     digitalWrite(red_led, LOW);
     digitalWrite(yellow_led, LOW);
 
