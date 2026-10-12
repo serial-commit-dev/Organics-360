@@ -100,7 +100,7 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
 <script>
     function updateClock() {
       const now = new Date();
-      // Formats date and time cleanly (e.g., Oct 11, 2026, 11:55:30 PM)
+      // Formats date and time 
       const options = { 
         year: 'numeric', month: 'short', day: 'numeric', 
         hour: '2-digit', minute: '2-digit', second: '2-digit' 
