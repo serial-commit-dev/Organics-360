@@ -90,7 +90,7 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
       <td>CH4</td>
       <td>0.5</td>
       <td><span id="sensor-val">--</span></td>
-      <td><span id="gas-status"></span></td>
+      <td><span id="gas-status">--</span></td>
     </tr>
   </table>
       
