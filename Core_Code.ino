@@ -9,12 +9,13 @@
 const char* ap_ssid = "Compost Monitor C1";
 const char* ap_password = "password3141";
 
-int sensor_pin = 12;
+int sensor_pin = 34;
+
 int red_led = 13;
 int yellow_led = 14;
 int green_led = 15;
 
-float PL_CH4 = 0.5; // Permissible Methane Value
+float PL_CH4 = 100; // Permissible Methane Value
 float sensorVal;
 
 unsigned long yellow_millis = 0;
@@ -120,7 +121,7 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
             document.getElementById('status').innerText = "Status: Offline";
         }
      }
-     setInterval(fetchGasData, 30000);
+     setInterval(fetchGasData, 3000);
 </script>
 
 </body>
