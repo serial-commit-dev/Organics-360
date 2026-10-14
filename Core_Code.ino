@@ -114,7 +114,6 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
          try { const response = await fetch('/api/data');
               const data = await response.json();
               document.getElementById('sensor-val').innerText = data.sensor_value;
-              document.getElementById('status').innerText = "Status: Online";
               document.getElementById('gas-status').innerText = data.gas_status;
         } catch (error) {
             console.error("Error fetching data:", error);
