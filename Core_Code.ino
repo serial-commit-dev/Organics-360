@@ -117,7 +117,7 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
               document.getElementById('gas-status').innerText = data.gas_status;
         } catch (error) {
             console.error("Error fetching data:", error);
-            document.getElementById('status').innerText = "Status: Offline";
+            
         }
      }
      setInterval(fetchGasData, 3000);
