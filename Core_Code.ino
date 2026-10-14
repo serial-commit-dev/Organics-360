@@ -89,7 +89,7 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
     </tr>
     <tr>
       <td>CH4</td>
-      <td>0.5</td>
+      <td>100</td>
       <td><span id="sensor-val">--</span></td>
       <td><span id="gas-status">--</span></td>
     </tr>
@@ -173,7 +173,7 @@ void loop(){
  
   unsigned long current_millis = millis();
 
-  sensorVal = digitalRead(sensor_pin);
+  sensorVal = analogRead(sensor_pin);
 
 if (current_millis - previous_millis >= blink_interval) {
   previous_millis = current_millis;
