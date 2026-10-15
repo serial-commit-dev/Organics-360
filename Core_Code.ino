@@ -16,7 +16,7 @@ int yellow_led = 14;
 int green_led = 15;
 int buzzer_pin = 27;
 
-float PL_CH4 = 400; // Permissible Methane Value
+float PL_CH4 = 300; // Permissible Methane Value
 float sensorVal;
 
 unsigned long yellow_millis = 0;
