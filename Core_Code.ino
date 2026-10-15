@@ -14,8 +14,9 @@ int sensor_pin = 34;
 int red_led = 13;
 int yellow_led = 14;
 int green_led = 15;
+int buzzer_pin = 27;
 
-float PL_CH4 = 100; // Permissible Methane Value
+float PL_CH4 = 400; // Permissible Methane Value
 float sensorVal;
 
 unsigned long yellow_millis = 0;
@@ -29,9 +30,13 @@ unsigned long previous_millis = 0;
 unsigned long blink_previous_millis = 0;
 const long blink_interval = 500; // 500ms blink speed
 
+unsigned long buzz_millis = 0;
+const long buzz
+
 String gas_status = "";
 
 bool blinkState = false;
+bool buzzState = false;
 
 WebServer server(80);
 
@@ -48,7 +53,6 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
       h2 {color: lightblue; text-align: center;}
       .data-box { margin: 20px; ; padding: 20px; width: 250px; margin-top: 15px;}
       .gas-level { font-size: 32px; font-weight: bold; margin-top: 10px; color: #d35400; }
-      .status-text { font-size: 14px; margin-top: 10px; color: #7f8c8d; }
       .tagline { font-size: 16px; font-weight: bold; color: darkblue; text-align: center; }
       nav {padding: 10px 20px; background-color: darkblue }
       .nav-2 {background-color: lightblue; padding:1px 1px; margin: 0px; }
@@ -89,7 +93,7 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
     </tr>
     <tr>
       <td>CH4</td>
-      <td>100</td>
+      <td>400</td>
       <td><span id="sensor-val">--</span></td>
       <td><span id="gas-status">--</span></td>
     </tr>
@@ -120,7 +124,7 @@ const char INDEX_HTML[] PROGMEM = R"rawliteral(
             
         }
      }
-     setInterval(fetchGasData, 3000);
+     setInterval(fetchGasData, 1000);
 </script>
 
 </body>
@@ -161,10 +165,12 @@ void setup() {
  pinMode(yellow_led, OUTPUT);
  pinMode(green_led, OUTPUT);
  pinMode(red_led, OUTPUT);
+ pinMode(buzzer_pin, OUTPUT);
 
  digitalWrite(green_led, LOW);
  digitalWrite(yellow_led, LOW);
  digitalWrite(red_led, LOW); 
+ digitalWrite(buzzer_pin, LOW);
 }
 
 
@@ -177,15 +183,22 @@ void loop(){
 
 if (current_millis - previous_millis >= blink_interval) {
   previous_millis = current_millis;
-  blinkState = !blinkState; // Toggle state every 500ms
-
+  blinkState = !blinkState;  // Toggle state every 500ms
 } 
+
+if (current_millis - buzz_millis >= buzz_interval){
+   buzz_millis = current_millis;
+   buzzState = !buzzState;
+}   
 
   if (sensorVal >= PL_CH4*2) {
     blink_red();  // add a seperate function to make red blink
+    digitalWrite(buzzer_pin, buzzState ? HIGH : LOW);
     gas_status = "Hazard";
     digitalWrite(yellow_led, LOW);
     digitalWrite(green_led, LOW);
+
+
 
   } else if (sensorVal < PL_CH4*2 && sensorVal > PL_CH4*1.75){
     digitalWrite(red_led, HIGH);
