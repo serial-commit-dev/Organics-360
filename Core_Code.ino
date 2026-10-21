@@ -2,10 +2,7 @@
 #include <WebServer.h>
 #include <ArduinoJson.h>
 
-
-
 // WiFi access point config
-
 const char* ap_ssid = "Compost Monitor C1";
 const char* ap_password = "password3141";
 
@@ -16,7 +13,7 @@ int yellow_led = 14;
 int green_led = 15;
 int buzzer_pin = 27;
 
-float PL_CH4 = 300; // Permissible Methane Value
+float PL_CH4 = 480; // Permissible Methane Value
 float sensorVal;
 
 unsigned long yellow_millis = 0;
@@ -31,7 +28,7 @@ unsigned long blink_previous_millis = 0;
 const long blink_interval = 500; // 500ms blink speed
 
 unsigned long buzz_millis = 0;
-const long buzz
+const long buzz_interval = 2000;
 
 String gas_status = "";
 
@@ -40,189 +37,96 @@ bool buzzState = false;
 
 WebServer server(80);
 
-const char INDEX_HTML[] PROGMEM = R"rawliteral(
-<!DOCTYPE html>
-<html lang="en">
-<head>
-   <meta charset="UTF-8">
-   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>Compost Bin Monitor</title>
-   <style>
-      body { font-family: Arial, sans-serif; margin: 0px; padding: 0px; background-color:#98bf64 ; color: #333; }
-      h1 {color: #FFF; text-align: center;}
-      h2 {color: lightblue; text-align: center;}
-      .data-box { margin: 20px; ; padding: 20px; width: 250px; margin-top: 15px;}
-      .gas-level { font-size: 32px; font-weight: bold; margin-top: 10px; color: #d35400; }
-      .tagline { font-size: 16px; font-weight: bold; color: darkblue; text-align: center; }
-      nav {padding: 10px 20px; background-color: darkblue }
-      .nav-2 {background-color: lightblue; padding:1px 1px; margin: 0px; }
-      .methane {font-size: 20px}
-      .info {margin: 0px; padding: 0px 22px; display: flex; gap: 8px;; padding: 10px 0; font-size: 23px; }
-      table, th, td {border:0.8px solid black; border-radius: 8px; margin: 0px; padding: 10px; margin-left: 73px; font-weight: bold; }
-   </style>
-</head>
-<body>
-  <header>
-    <nav>
-        <h2>Thiruvananthapuram Municipal Corporation</h3>
-        <h1>Organics 360</h1>
-       
-        
-    </nav>
-
-    <div class="nav-2">
-       <p class="tagline">Smart Solution For Municipal Organic Waste Corporation</p>
-    </div>
-</header>
-
-  <div class="info">
-    <p class="date"></p>
-    <strong>MRF:</strong> Maruthoorkadavu | <strong>Ward:</strong> Kalady | <strong>Health Circle:</strong> Fort
-    <div id="live-clock" style="font-weight: bold; color: #008000; font-size: 23px; margin-left: auto;">
-      --
-    </div>
-  </div>
-  
-
-<table>
-    <tr>
-      <th>Gas</th>
-      <th>Permissible Level</th>
-      <th>Gas Levels (PPM)</th>
-      <th>Status</th>
-    </tr>
-    <tr>
-      <td>CH4</td>
-      <td>400</td>
-      <td><span id="sensor-val">--</span></td>
-      <td><span id="gas-status">--</span></td>
-    </tr>
-  </table>
-      
-
-<script>
-    function updateClock() {
-      const now = new Date();
-      // Formats date and time 
-      const options = { 
-        year: 'numeric', month: 'short', day: 'numeric', 
-        hour: '2-digit', minute: '2-digit', second: '2-digit' 
-      };
-      document.getElementById('live-clock').innerText = now.toLocaleDateString('en-US', options);
-    }
-
-    // Update every second for a live clock effect
-    setInterval(updateClock, 1000);
-    updateClock();
-    async function fetchGasData() {
-         try { const response = await fetch('/api/data');
-              const data = await response.json();
-              document.getElementById('sensor-val').innerText = data.sensor_value;
-              document.getElementById('gas-status').innerText = data.gas_status;
-        } catch (error) {
-            console.error("Error fetching data:", error);
-            
-        }
-     }
-     setInterval(fetchGasData, 1000);
-</script>
-
-</body>
-</html>
-)rawliteral";
-
-void handleRoot() {
- server.send(200, "text/html", INDEX_HTML);
-}
+// Function prototypes
+void blink_red();
+void blink_yellow();
+void blink_green();
 
 void handleApiData() {
- StaticJsonDocument<128> doc;
- doc["sensor_value"] = sensorVal;
- doc["gas_status"] = gas_status;
+  StaticJsonDocument<128> doc;
+  doc["sensor_value"] = sensorVal;
+  doc["gas_status"] = gas_status;
 
- String jsonOutput;
- serializeJson(doc, jsonOutput);
- server.send(200, "application/json", jsonOutput);
+  String jsonOutput;
+  serializeJson(doc, jsonOutput);
+  
+  // Allow the tablet server to access this API endpoint across origins
+  server.sendHeader("Access-Control-Allow-Origin", "*");
+  server.send(200, "application/json", jsonOutput);
 }
-
 
 void setup() {
- Serial.begin(115200);
- 
- WiFi.softAP(ap_ssid, ap_password);
+  Serial.begin(115200);
+  
+  WiFi.softAP(ap_ssid, ap_password);
 
- Serial.println("\n--- ESp32 Access Point Started ---");
- Serial.print("SSID: ");
- Serial.println(ap_ssid);
- Serial.print("AP IP Adress: ");
- Serial.println(WiFi.softAPIP()); 
+  Serial.println("\n--- ESP32 Access Point Started ---");
+  Serial.print("SSID: ");
+  Serial.println(ap_ssid);
+  Serial.print("AP IP Address: ");
+  Serial.println(WiFi.softAPIP()); 
 
- server.on("/", handleRoot);
- server.on("/api/data", handleApiData);
- server.begin();
- 
- pinMode(sensor_pin, INPUT);
- pinMode(yellow_led, OUTPUT);
- pinMode(green_led, OUTPUT);
- pinMode(red_led, OUTPUT);
- pinMode(buzzer_pin, OUTPUT);
+  server.on("/api/data", handleApiData);
+  server.begin();
+  
+  pinMode(sensor_pin, INPUT);
+  pinMode(yellow_led, OUTPUT);
+  pinMode(green_led, OUTPUT);
+  pinMode(red_led, OUTPUT);
+  pinMode(buzzer_pin, OUTPUT);
 
- digitalWrite(green_led, LOW);
- digitalWrite(yellow_led, LOW);
- digitalWrite(red_led, LOW); 
- digitalWrite(buzzer_pin, LOW);
+  digitalWrite(green_led, LOW);
+  digitalWrite(yellow_led, LOW);
+  digitalWrite(red_led, LOW); 
+  digitalWrite(buzzer_pin, LOW);
 }
-
 
 void loop(){
   server.handleClient();
- 
+  
   unsigned long current_millis = millis();
-
   sensorVal = analogRead(sensor_pin);
 
-if (current_millis - previous_millis >= blink_interval) {
-  previous_millis = current_millis;
-  blinkState = !blinkState;  // Toggle state every 500ms
-} 
+  if (current_millis - previous_millis >= blink_interval) {
+    previous_millis = current_millis;
+    blinkState = !blinkState;  // Toggle state every 500ms
+  } 
 
-if (current_millis - buzz_millis >= buzz_interval){
-   buzz_millis = current_millis;
-   buzzState = !buzzState;
-}   
+  if (current_millis - buzz_millis >= buzz_interval){
+     buzz_millis = current_millis;
+     buzzState = !buzzState;
+  }   
 
   if (sensorVal >= PL_CH4*2) {
-    blink_red();  // add a seperate function to make red blink
+    blink_red();  
     digitalWrite(buzzer_pin, buzzState ? HIGH : LOW);
     gas_status = "Hazard";
     digitalWrite(yellow_led, LOW);
     digitalWrite(green_led, LOW);
 
-
-
   } else if (sensorVal < PL_CH4*2 && sensorVal > PL_CH4*1.75){
     digitalWrite(red_led, HIGH);
     gas_status = "Danger";
 
-  }else if (sensorVal < PL_CH4*1.75 && sensorVal >= PL_CH4*1.5 && (current_millis - yellow_millis >= yellow_b_interval)){
+  } else if (sensorVal < PL_CH4*1.75 && sensorVal >= PL_CH4*1.5 && (current_millis - yellow_millis >= yellow_b_interval)){
     yellow_millis = current_millis;
-    blink_yellow();  //add function to make yellow led blink
+    blink_yellow();  
     gas_status = "Critical";
     digitalWrite(red_led, LOW);
     digitalWrite(green_led, LOW);
 
-  }else if (sensorVal < PL_CH4*1.5 && sensorVal >= PL_CH4*1.25){
+  } else if (sensorVal < PL_CH4*1.5 && sensorVal >= PL_CH4*1.25){
     digitalWrite(yellow_led, HIGH);
     gas_status = "Borderline 2";
 
-  }else if (sensorVal < PL_CH4*1.25 && sensorVal > PL_CH4*1 && (current_millis - green_millis >= green_b_interval)) {
+  } else if (sensorVal < PL_CH4*1.25 && sensorVal > PL_CH4*1 && (current_millis - green_millis >= green_b_interval)) {
     green_millis = current_millis;
     blink_green();
     gas_status = "Borderline 1";
     digitalWrite(red_led, LOW);
     digitalWrite(yellow_led, LOW);
 
-  }else if (sensorVal < PL_CH4) {
+  } else if (sensorVal < PL_CH4) {
      digitalWrite(green_led, HIGH);
      gas_status = "Safe";
   }
